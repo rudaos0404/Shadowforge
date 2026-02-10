@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User, GameState } from '../entity/user.entity';
 import { Monster } from '../entity/monster.entity';
-import { MonsterGrade, MONSTER_BOOK } from '../game/monsters.data';
+import { MonsterGrade, MONSTER_BOOK } from '../data/monsters.data';
 
 @Injectable()
 export class AppService {
