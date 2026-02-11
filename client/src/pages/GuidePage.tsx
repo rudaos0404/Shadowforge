@@ -7,7 +7,7 @@ export default function GuidePage() {
   const navigate = useNavigate();
 
   return (
-    <GameFrame backgroundUrl={BG}>
+    <GameFrame bg={BG}>
       <button type="button" onClick={() => navigate("/lobby")} style={styles.topRightBtn}>
         로비
       </button>

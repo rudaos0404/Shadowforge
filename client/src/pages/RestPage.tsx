@@ -5,22 +5,20 @@ import { useGameStore } from "../stores/game.store";
 export default function RestPage() {
   const navigate = useNavigate();
 
-  const hp = useGameStore((s) => s.hp);
+  const hp = useGameStore((s) => s.gameData?.hp ?? 0);
+  const maxHp = useGameStore((s) => s.gameData?.maxHp ?? 100);
   const restHeal = useGameStore((s) => s.restHeal);
-  const completeBattleStage = useGameStore((s) => s.completeBattleStage); // 휴식은 “행동”이므로 stage+1을 원하면 이걸 쓰면 됨
   const restoreSnapshotIfAny = useGameStore((s) => s.restoreSnapshotIfAny);
   const clearSnapshot = useGameStore((s) => s.clearSnapshot);
 
-  const back = () => {
+  const back = async () => {
     restoreSnapshotIfAny();
     navigate("/turn");
   };
 
-  const doRest = () => {
-    restHeal();
+  const doRest = async () => {
+    await restHeal();
     clearSnapshot();
-    // 휴식도 한 턴 사용(=스테이지 진행)으로 처리하고 싶으면 아래를 유지
-    completeBattleStage();
     navigate("/turn");
   };
 
@@ -44,10 +42,10 @@ export default function RestPage() {
 
           <div className="flex-1">
             <div className="text-white text-4xl font-extrabold">HP 회복</div>
-            <div className="text-white/70 mt-2">HP +30 (최대 100)</div>
+            <div className="text-white/70 mt-2">HP +30 (최대 {maxHp})</div>
 
             <div className="mt-6 text-white/80">
-              현재 HP: <span className="font-bold">{hp}</span> / 100
+              현재 HP: <span className="font-bold">{hp}</span> / {maxHp}
             </div>
 
             <div className="mt-8">

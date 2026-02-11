@@ -29,8 +29,15 @@ export class User {
         maxHp: number;
         str: number;
         agi: number;
-        stunned: boolean; // ✨ 기절 상태 (추가됨)
-        luckyCooldown: number; // 🍀 럭키 어택 쿨타임 (0일 때 사용 가능)
+        stunned: boolean;
+        luckyCooldown: number;
         gold: number;
+        nextMonsterIntent: string | null; // ✨ 추가됨
+        canSeeIntent: boolean; // ✨ 추가됨
+
+        // 🎒 인벤토리 시스템 (Gap 1 해결)
+        potions: number;            // 포션 개수
+        inventory: string[];        // 획득한 무기 ID 목록 (예: ['NORMAL_SWORD', 'RARE_SWORD'])
+        equippedWeapon: string | null; // 현재 장착 중인 무기 ID (없으면 null)
     };
 }

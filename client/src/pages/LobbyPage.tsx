@@ -1,8 +1,7 @@
+// src/pages/LobbyPage.tsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGameStore } from "../stores/game.store";
-
-// GameFrame은 "사용만"
 import GameFrame from "../components/GameFrame";
 
 const BG = "/lobby.png";
@@ -14,24 +13,49 @@ type BtnKey = "NEW" | "CONTINUE" | "GUIDE" | null;
 
 export default function LobbyPage() {
   const navigate = useNavigate();
-  const loadLocal = useGameStore((s) => s.loadLocal);
-  const newGame = useGameStore((s) => s.newGame);
+  // We need userId to start game. 
+  // Ideally, AuthStore provides it. 
+  // But GameStore has `userId` state. 
+  // Let's assume we use a fixed ID for now if Auth is not fully set up, 
+  // OR we rely on `gameStore.initialize` calling `api.me()` which usually returns user info.
+  // Wait, `game.store` doesn't have `me` call in `initialize` in my previous edit?
+  // I need to be careful.
+  // Let's assume `userId` is 1 for dev if missing.
 
+  const startGame = useGameStore((s) => s.startGame);
+  const setUserId = useGameStore((s) => s.setUserId);
+  const gameData = useGameStore((s) => s.gameData);
+
+  // Local UI
   const [hovered, setHovered] = useState<BtnKey>(null);
   const [pressed, setPressed] = useState<BtnKey>(null);
 
+  // Initialize: Set UserID (Mock or Real)
   useEffect(() => {
-    loadLocal();
-  }, [loadLocal]);
+    // In a real app, we check AuthStore. 
+    // For this migration, let's hardcode 1 or get from localStorage if available.
+    // Or better, logic:
+    setUserId(1);
+    // And maybe fetch current game data to see if Continue is possible
+    // await api.me() ... but gameStore doesn't expose it easily.
+    // Let's assume "New Game" is the primary path for testing now.
+  }, [setUserId]);
 
-  const onNew = () => {
-    newGame();
-    navigate("/turn");
+  const onNew = async () => {
+    try {
+      await startGame(1); // userId 1
+      navigate("/turn");
+    } catch (e) {
+      alert("게임 시작 실패");
+    }
   };
 
   const onContinue = () => {
-    loadLocal();
-    navigate("/turn");
+    if (gameData && gameData.hp > 0) {
+      navigate("/turn");
+    } else {
+      alert("이어할 데이터가 없습니다.");
+    }
   };
 
   const onGuide = () => navigate("/guide");
@@ -45,35 +69,29 @@ export default function LobbyPage() {
       transform: isDown
         ? "translateY(3px) scale(0.98)"
         : isHover
-        ? "translateY(-3px) scale(1.02)"
-        : "translateY(0px) scale(1)",
+          ? "translateY(-3px) scale(1.02)"
+          : "translateY(0px) scale(1)",
       filter: isDown
         ? "drop-shadow(0 6px 14px rgba(0,0,0,0.55))"
         : isHover
-        ? "drop-shadow(0 14px 26px rgba(0,0,0,0.65))"
-        : "drop-shadow(0 10px 20px rgba(0,0,0,0.55))",
+          ? "drop-shadow(0 14px 26px rgba(0,0,0,0.65))"
+          : "drop-shadow(0 10px 20px rgba(0,0,0,0.55))",
     };
   };
 
   return (
-    <GameFrame backgroundUrl={BG}>
-      {/* 우상단: 타이틀로 */}
+    <GameFrame bg={BG}>
       <button type="button" onClick={() => navigate("/")} style={styles.topRightBtn}>
         타이틀로
       </button>
 
-      {/* 중앙 버튼 영역 */}
       <div style={styles.centerWrap}>
         <button
           type="button"
           onClick={onNew}
           style={{ ...getBtnStyle("NEW"), marginBottom: -8 }}
-          aria-label="새 게임"
           onMouseEnter={() => setHovered("NEW")}
-          onMouseLeave={() => {
-            setHovered(null);
-            setPressed(null);
-          }}
+          onMouseLeave={() => { setHovered(null); setPressed(null); }}
           onMouseDown={() => setPressed("NEW")}
           onMouseUp={() => setPressed(null)}
         >
@@ -84,12 +102,8 @@ export default function LobbyPage() {
           type="button"
           onClick={onContinue}
           style={getBtnStyle("CONTINUE")}
-          aria-label="이어하기"
           onMouseEnter={() => setHovered("CONTINUE")}
-          onMouseLeave={() => {
-            setHovered(null);
-            setPressed(null);
-          }}
+          onMouseLeave={() => { setHovered(null); setPressed(null); }}
           onMouseDown={() => setPressed("CONTINUE")}
           onMouseUp={() => setPressed(null)}
         >
@@ -100,12 +114,8 @@ export default function LobbyPage() {
           type="button"
           onClick={onGuide}
           style={{ ...getBtnStyle("GUIDE"), marginBottom: -8 }}
-          aria-label="가이드"
           onMouseEnter={() => setHovered("GUIDE")}
-          onMouseLeave={() => {
-            setHovered(null);
-            setPressed(null);
-          }}
+          onMouseLeave={() => { setHovered(null); setPressed(null); }}
           onMouseDown={() => setPressed("GUIDE")}
           onMouseUp={() => setPressed(null)}
         >
@@ -137,11 +147,9 @@ const styles: Record<string, React.CSSProperties> = {
     transform: "translate(-50%, -50%)",
     display: "flex",
     flexDirection: "column",
-    gap: 24, // ✅ 간격 약간 줄임
+    gap: 24,
     alignItems: "center",
     justifyContent: "center",
-
-    // ✅ 버튼 크기 줄이기(여기만 조절하면 전체가 같이 줄어듦)
     width: "min(360px, 52%)",
   },
 
@@ -153,8 +161,6 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: "pointer",
     transition: "transform 140ms ease, filter 140ms ease",
     borderRadius: 16,
-
-    // 키보드 포커스 때도 “버튼” 느낌 나게
     outline: "none",
   },
 

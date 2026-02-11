@@ -2,9 +2,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SHOP_ITEMS, useGameStore } from "../stores/game.store";
+import type { ShopItemId } from "../shared/api/types";
 
 type ShopItem = (typeof SHOP_ITEMS)[number];
-type CartEntry = { id: ShopItem["id"]; qty: number };
+type CartEntry = { id: ShopItemId; qty: number };
 
 function formatGold(n: number) {
   return `${n}G`;
@@ -13,33 +14,26 @@ function formatGold(n: number) {
 export default function ShopPage() {
   const navigate = useNavigate();
 
-  const stage = useGameStore((s) => s.stage);
-  const hp = useGameStore((s) => s.hp);
-  const gold = useGameStore((s) => s.gold);
-  const potions = useGameStore((s) => s.potions);
-  const ownedWeapons = useGameStore((s) => s.ownedWeapons);
-  const snapshotBeforeEvent = useGameStore((s) => s.snapshotBeforeEvent);
+  const gameData = useGameStore((s) => s.gameData);
+  const userId = useGameStore((s) => s.userId);
+  const buyItem = useGameStore((s) => s.buyItem);
+  const nextTurn = useGameStore((s) => s.nextTurn);
 
-  const snapshotEvent = useGameStore((s) => s.snapshotEvent);
-  const restoreSnapshotIfAny = useGameStore((s) => s.restoreSnapshotIfAny);
-  const clearSnapshot = useGameStore((s) => s.clearSnapshot);
-
-  const spendGold = useGameStore((s) => s.spendGold);
-  const addPotion = useGameStore((s) => s.addPotion);
-  const addWeapon = useGameStore((s) => s.addWeapon);
-  const completeSpecialStage = useGameStore((s) => s.completeSpecialStage);
+  const stage = gameData?.currentTurn ?? 1;
+  const hp = gameData?.hp ?? 0;
+  const gold = gameData?.gold ?? 0;
+  const potions = gameData?.potions ?? 0;
+  const ownedWeapons = gameData?.inventory ?? [];
 
   const [cart, setCart] = useState<CartEntry[]>([]);
   const [notice, setNotice] = useState<string>("");
 
-  // ✅ 상점 들어왔을 때만 스냅샷(구매 안하고 돌아가기 시 카드 유지)
   useEffect(() => {
-    if (!snapshotBeforeEvent) snapshotEvent();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (!gameData || !userId) navigate('/');
+  }, [gameData, userId, navigate]);
 
   const cartTotal = useMemo(() => {
-    const map = new Map<ShopItem["id"], number>();
+    const map = new Map<ShopItemId, number>();
     for (const c of cart) map.set(c.id, (map.get(c.id) ?? 0) + c.qty);
 
     let total = 0;
@@ -60,8 +54,6 @@ export default function ShopPage() {
 
   const addToCart = (item: ShopItem) => {
     setNotice("");
-
-    // 검: 중복 구매 불가 (이미 보유 or 카트에 이미 있음)
     if (isWeapon(item)) {
       const alreadyOwned = isOwnedWeapon(item);
       const alreadyInCart = cart.some((c) => c.id === item.id);
@@ -69,8 +61,6 @@ export default function ShopPage() {
       setCart((prev) => [...prev, { id: item.id, qty: 1 }]);
       return;
     }
-
-    // 포션: 중복 가능
     setCart((prev) => {
       const idx = prev.findIndex((c) => c.id === item.id);
       if (idx === -1) return [...prev, { id: item.id, qty: 1 }];
@@ -86,14 +76,12 @@ export default function ShopPage() {
   };
 
   const onBack = () => {
-    // ✅ 구매 확정 안하면 유지(카드 그대로)
-    restoreSnapshotIfAny();
-    clearCart(); // ✅ 잔상 방지
     navigate("/turn");
   };
 
-  const onConfirm = () => {
+  const onConfirm = async () => {
     setNotice("");
+    if (!userId) return;
 
     if (cartCount === 0) {
       setNotice("담긴 아이템이 없다.");
@@ -104,37 +92,33 @@ export default function ShopPage() {
       return;
     }
 
-    // 실제 구매 반영(골드 차감)
-    const ok = spendGold(cartTotal);
-    if (!ok) {
-      setNotice("금화가 부족하다.");
-      return;
-    }
-
-    // 구매 반영: 포션/검
-    const countMap = new Map<ShopItem["id"], number>();
-    for (const c of cart) countMap.set(c.id, (countMap.get(c.id) ?? 0) + c.qty);
-
-    for (const item of SHOP_ITEMS) {
-      const qty = countMap.get(item.id) ?? 0;
-      if (qty <= 0) continue;
-
-      if (item.id === "POTION") {
-        addPotion(qty);
-      } else if (item.weaponId) {
-        addWeapon(item.weaponId);
+    try {
+      // Sequentially buy items (Server doesn't have bulk buy yet)
+      for (const c of cart) {
+        for (let i = 0; i < c.qty; i++) {
+          // ItemId for API: POTION or weaponId
+          // Server `buyItem` expects `itemId`.
+          // WEAPONS logic: item.id matches server itemId?
+          // SHOP_ITEMS in `game.store.ts`: id is POTION or WEAPON key.
+          // Server `items.data.ts` expects 'POTION' or 'SWORD', etc.
+          // It matches.
+          await buyItem(userId, c.id);
+        }
       }
+
+      // After success, advance turn?
+      // Client logic "Stage +1".
+      await nextTurn(userId);
+
+      clearCart();
+      navigate("/turn");
+
+    } catch (e: any) {
+      setNotice(e.message || "구매 실패");
     }
-
-    // ✅ 구매 확정 시에만: STAGE +1 & 다음 선택지 새로(카드 변화)
-    clearSnapshot();
-    completeSpecialStage("SHOP");
-
-    // ✅ 상태 정리(다음 진입 잔상 방지)
-    clearCart();
-
-    navigate("/turn");
   };
+
+  if (!gameData) return <div>Loading...</div>;
 
   return (
     <div className="shopRoot">

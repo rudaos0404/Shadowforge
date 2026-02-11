@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
 import { AppController } from '../controllers/app.controller';
-import { AppService } from '../services/app.service';
+import { UserService } from '../services/user.service';
+import { GameService } from '../services/game.service';
+import { BattleService } from '../services/battle.service';
+import { ShopService } from '../services/shop.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../entity/user.entity';
 import { Monster } from '../entity/monster.entity';
@@ -10,22 +13,27 @@ import { join } from 'path';
 @Module({
   imports: [
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', '..', 'public'), // server/public 폴더 서빙
-      serveRoot: '/', // http://localhost:3000/monsters/kobold.png
+      rootPath: join(__dirname, '..', '..', 'public'),
+      serveRoot: '/',
     }),
     TypeOrmModule.forRoot({
-      type: 'mariadb',      // 'mysql'이라고 써도 되지만, 명확하게 'mariadb' 추천
-      host: 'localhost',    // 내 컴퓨터에 켜져 있으니까 localhost
-      port: 3306,           // 알려주신 포트 번호
-      username: 'root',     // 알려주신 아이디
-      password: 'root',     // 알려주신 비밀번호
-      database: 'game_db',  // ⚠️ 중요: 사용할 데이터베이스 이름 (아래 설명 참고)
-      entities: [User],     // 사용할 테이블(엔티티) 목록
-      synchronize: true,    // 개발 중에는 true (자동으로 테이블 생성)
+      type: 'mariadb',
+      host: 'localhost',
+      port: 3306,
+      username: 'root',
+      password: 'root',
+      database: 'game_db',
+      entities: [User, Monster],
+      synchronize: true,
     }),
     TypeOrmModule.forFeature([User, Monster]),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    UserService,
+    GameService,
+    BattleService,
+    ShopService,
+  ],
 })
 export class AppModule { }

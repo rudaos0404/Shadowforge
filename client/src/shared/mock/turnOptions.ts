@@ -1,4 +1,4 @@
-import type { TurnOption, TurnOptionType } from "../../stores/game.store";
+import type { TurnOption, TurnOptionType } from "../api/types";
 
 type Params = {
   hp: number;

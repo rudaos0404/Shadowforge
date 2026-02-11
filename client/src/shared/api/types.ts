@@ -1,9 +1,8 @@
 // 2.1 내 정보 조회 :contentReference[oaicite:2]{index=2}
 export type MeResponse = {
-  id: string;
-  email: string;
-  nickname: string;
-  createdAt: string;
+  id: number;
+  username: string;
+  gameData: GameData | null;
 };
 
 // 3.1 게임 불러오기 :contentReference[oaicite:3]{index=3}
@@ -95,3 +94,87 @@ export type InventoryItem = {
   atk: number;
   img: string; // public path
 };
+
+// --- Server Integration Types ---
+
+export type GameState =
+  | 'SELECTING'
+  | 'BATTLE'
+  | 'BOSS_BATTLE'
+  | 'SHOP'
+  | 'REST'
+  | 'TREASURE'
+  | 'GAME_CLEAR'
+  | 'GAME_OVER';
+
+export interface Monster {
+  id: number;
+  name: string;
+  hp: number;
+  maxHp: number;
+  attack: number;
+  defense: number;
+  agi: number;
+  rewardGold: number;
+  imagePath: string;
+  nextAction?: string;
+}
+
+export interface GameData {
+  currentTurn: number;
+  state: GameState;
+  options: string[];
+  hp: number;
+  maxHp: number;
+  str: number;
+  agi: number;
+  stunned: boolean;
+  luckyCooldown: number;
+  gold: number;
+  potions: number;
+  inventory: string[];
+  equippedWeapon: string | null;
+}
+
+export interface StartGameResponse {
+  message: string;
+  turn: number;
+  options: string[];
+  state: GameState;
+}
+
+export interface SelectOptionResponse {
+  message: string;
+  state: GameState;
+  // BATTLE
+  monster?: Monster;
+  monsterIntent?: string;
+  canSeeIntent?: boolean;
+  luckyCooldown?: number;
+  // SHOP
+  items?: string[];
+  // REST
+  hp?: number;
+  maxHp?: number;
+  description?: string;
+  // TREASURE
+  gold?: number;
+}
+
+export interface BattleResponse {
+  result: 'WIN' | 'LOSE' | 'CONTINUE';
+  logs: string[];
+  monsterHp: number;
+  userHp: number;
+  monsterAction?: string;
+  nextMonsterIntent?: string | null;
+  canSeeIntent?: boolean;
+  luckyCooldown?: number;
+}
+
+export interface ClaimRewardResponse {
+  message: string;
+  str: number;
+  agi: number;
+  potions: number;
+}
