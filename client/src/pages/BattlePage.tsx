@@ -1,3 +1,4 @@
+// BattlePage.tsx
 import { useEffect, useState, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGameStore, WEAPONS } from "../stores/game.store";
@@ -17,7 +18,11 @@ function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n));
 }
 
-function formatIntent(monster: Monster | undefined, intent: string | undefined | null, visible: boolean) {
+function formatIntent(
+  monster: Monster | undefined,
+  intent: string | undefined | null,
+  visible: boolean
+) {
   if (!monster || !intent) return "❓  ???";
   if (!visible) return "❓  ???";
   if (intent === "ATTACK") return `⚔️  공격 준비`;
@@ -28,7 +33,6 @@ function formatIntent(monster: Monster | undefined, intent: string | undefined |
 export default function BattlePage() {
   const navigate = useNavigate();
 
-  // ✅ Store State (Server Synced)
   const gameData = useGameStore((s) => s.gameData);
   const userId = useGameStore((s) => s.userId);
   const battleAction = useGameStore((s) => s.battle);
@@ -36,7 +40,6 @@ export default function BattlePage() {
   const nextTurn = useGameStore((s) => s.nextTurn);
   const isLoading = useGameStore((s) => s.isLoading);
 
-  // ✅ Server Data mapping
   const stage = gameData?.currentTurn ?? 1;
   const hp = gameData?.hp ?? 0;
   const maxHp = gameData?.maxHp ?? 100;
@@ -49,23 +52,18 @@ export default function BattlePage() {
   const monster = useGameStore((s) => s.currentMonster);
 
   const [logs, setLogs] = useState<string[]>([]);
-
-  // Local UI states
   const [shakePlayer, setShakePlayer] = useState(false);
   const [shakeEnemy, setShakeEnemy] = useState(false);
   const [luckyChecked, setLuckyChecked] = useState(false);
   const [rewardOpen, setRewardOpen] = useState(false);
 
-  // Derived
   const isVictory = (monster?.hp ?? 0) <= 0;
   const isDefeat = hp <= 0;
   const canAct = !isLoading && !isVictory && !isDefeat && !stunned;
 
-  // Intent
   const [nextIntent, setNextIntent] = useState<string | null>(null);
   const [canSeeIntent, setCanSeeIntent] = useState(false);
 
-  // Initialize
   const storeNextIntent = useGameStore((s) => s.nextMonsterIntent);
   const storeCanSeeIntent = useGameStore((s) => s.canSeeIntent);
 
@@ -78,15 +76,13 @@ export default function BattlePage() {
       navigate("/");
       return;
     }
-    // ✨ 초기 의도 동기화
     setNextIntent(storeNextIntent);
     setCanSeeIntent(storeCanSeeIntent);
   }, [gameData, userId, navigate, storeNextIntent, storeCanSeeIntent]);
 
-  // ✨ 상태가 SELECTING으로 바뀌면 즉시 퇴장 (로딩 멈춤 방지)
   useEffect(() => {
-    if (gameData?.state === 'SELECTING' && !rewardOpen) {
-      navigate('/turn');
+    if (gameData?.state === "SELECTING" && !rewardOpen) {
+      navigate("/turn");
     }
   }, [gameData?.state, navigate, rewardOpen]);
 
@@ -99,51 +95,45 @@ export default function BattlePage() {
     setTimeout(() => setShakeEnemy(false), 220);
   };
 
-  // Actions
   const handleAction = async (action: string) => {
     if (!monster || !canAct || !userId) return;
 
     try {
-      const res = await battleAction(userId, monster.id, action, luckyChecked && action !== 'DEFENSE');
+      const res = await battleAction(
+        userId,
+        monster.id,
+        action,
+        luckyChecked && action !== "DEFENSE"
+      );
 
       pushLog(res.logs);
 
-      if (res.result === 'WIN') {
-        setRewardOpen(true);
-      } else if (res.result === 'LOSE') {
-        // 패배 처리
-      }
+      if (res.result === "WIN") setRewardOpen(true);
 
-      if (action === 'ATTACK' || action === 'STRONG_ATTACK') triggerShakeEnemy();
-      if (res.monsterAction === 'ATTACK') triggerShakePlayer();
+      if (action === "ATTACK" || action === "STRONG_ATTACK") triggerShakeEnemy();
+      if (res.monsterAction === "ATTACK") triggerShakePlayer();
 
       setNextIntent(res.nextMonsterIntent);
       setCanSeeIntent(res.canSeeIntent);
 
       if (luckyChecked) setLuckyChecked(false);
-
     } catch (e) {
       console.error(e);
-      pushLog(['❌ 통신 오류 발생']);
+      pushLog(["❌ 통신 오류 발생"]);
     }
   };
 
-  const onAttack = () => handleAction('ATTACK');
-  const onDefend = () => handleAction('DEFENSE');
-  const onHeavy = () => handleAction('STRONG_ATTACK');
+  const onAttack = () => handleAction("ATTACK");
+  const onDefend = () => handleAction("DEFENSE");
+  const onHeavy = () => handleAction("STRONG_ATTACK");
 
-  const onPickReward = async (kind: 'STR' | 'AGI' | 'POTION') => {
+  const onPickReward = async (kind: "STR" | "AGI" | "POTION") => {
     if (!userId) return;
     try {
       await claimReward(userId, kind);
-
       const res = await nextTurn(userId);
-      setRewardOpen(false); // ✨ 턴 전환 정보까지 온 후 보상창 딛기
-
-      // 일반 턴이면 이동, 보스전이면 배틀 페이지 유지
-      if (res.state === 'SELECTING') {
-        navigate("/turn");
-      }
+      setRewardOpen(false);
+      if (res.state === "SELECTING") navigate("/turn");
     } catch (e) {
       console.error(e);
       alert("보상 처리 중 오류가 발생했습니다.");
@@ -161,26 +151,16 @@ export default function BattlePage() {
     }
   };
 
-  // Visuals
   const weaponIcon = WEAPONS[equippedWeaponId as string]?.img ?? "/gadgets/검.png";
-  const isBossBattle = gameData?.state === 'BOSS_BATTLE';
+  const isBossBattle = gameData?.state === "BOSS_BATTLE";
   const bgImg = isBossBattle ? `${BATTLE_DIR}/Bossbg.png` : `${BATTLE_DIR}/monsterbg.png`;
   const playerImg = isBossBattle ? `${BATTLE_DIR}/boss vs player.png` : `${BATTLE_DIR}/vs player.png`;
 
-  const isInBattle = gameData?.state === 'BATTLE' || gameData?.state === 'BOSS_BATTLE';
+  const isInBattle = gameData?.state === "BATTLE" || gameData?.state === "BOSS_BATTLE";
 
-  // ✨ 로딩 및 상태 예외 처리
   if (!gameData) return <div style={styles.page}>Loading Battle...</div>;
-
-  // 1. 정말 데이터가 필요한 로딩 중인 경우
-  if (isInBattle && !monster && isLoading) {
-    return <div style={styles.page}>Loading Battle...</div>;
-  }
-
-  // 2. 이미 전투가 종료되어 선택 단계로 넘어간 경우 (화면 숨기기 및 즉시 이동 대기)
-  if (!isInBattle && !rewardOpen) {
-    return null;
-  }
+  if (isInBattle && !monster && isLoading) return <div style={styles.page}>Loading Battle...</div>;
+  if (!isInBattle && !rewardOpen) return null;
 
   return (
     <div style={styles.page}>
@@ -210,7 +190,6 @@ export default function BattlePage() {
             clamp={clamp}
           />
 
-          {/* Player Panel & Actions (Bottom layout) */}
           <div style={styles.bottomBar}>
             <PlayerPanel
               hp={hp}
@@ -234,7 +213,6 @@ export default function BattlePage() {
             />
           </div>
 
-          {/* Overlays */}
           {isDefeat && (
             <div style={styles.overlay}>
               <div style={styles.overlayTitle}>DEFEAT</div>
@@ -254,6 +232,15 @@ export default function BattlePage() {
   );
 }
 
+// ✅ BattleControls.tsx 기준 동기화
+const BTN_W = 140;
+const BTN_H = 85;
+
+// ✅ (요청) BattleControls.tsx와 GAP 동기화: 6 → 3
+const GAP = 3;
+
+const GROUP_W = BTN_W * 3 + GAP * 2;
+
 const styles: Record<string, CSSProperties> = {
   page: {
     width: "100%",
@@ -268,7 +255,7 @@ const styles: Record<string, CSSProperties> = {
   outsideBg: {
     position: "absolute",
     inset: 0,
-    backgroundImage: 'url("/battle_bg_blur.png")', // If exists, else fallback
+    backgroundImage: 'url("/battle_bg_blur.png")',
     backgroundSize: "cover",
     filter: "blur(20px) brightness(0.4)",
   },
@@ -285,6 +272,7 @@ const styles: Record<string, CSSProperties> = {
     overflow: "hidden",
     boxShadow: "0 20px 80px rgba(0,0,0,1), 0 0 0 1px rgba(255,255,255,0.1)",
   },
+
   bg: {
     position: "absolute",
     inset: 0,
@@ -327,6 +315,7 @@ const styles: Record<string, CSSProperties> = {
     flexDirection: "column",
     gap: 12,
   },
+
   intentRow: {
     display: "flex",
     justifyContent: "center",
@@ -388,9 +377,9 @@ const styles: Record<string, CSSProperties> = {
     top: 0,
     left: 0,
     right: 0,
-    bottom: 120, // Leave room for bottom bar
+    bottom: 120,
     display: "flex",
-    justifyContent: "space-around",
+    justifyContent: "space-between",
     alignItems: "center",
     padding: "0 80px",
   },
@@ -398,12 +387,13 @@ const styles: Record<string, CSSProperties> = {
     flex: 1,
     display: "grid",
     placeItems: "center",
+    minWidth: 420,
   },
   playerSprite: {
     width: 200,
     height: "auto",
     filter: "drop-shadow(0 15px 35px rgba(0,0,0,0.8))",
-    transition: "transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+    transition: "none",
     position: "relative",
     top: 150,
   },
@@ -412,36 +402,46 @@ const styles: Record<string, CSSProperties> = {
     height: 320,
     objectFit: "contain",
     filter: "drop-shadow(0 15px 45px rgba(0,0,0,0.9))",
-    transition: "transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+    transition: "none",
   },
   shake: { transform: "translateX(8px)" },
+  shakeWrap: {
+    display: "inline-block",
+    animation: "hitShake 220ms ease-in-out",
+    willChange: "transform",
+    backfaceVisibility: "hidden",
+    WebkitBackfaceVisibility: "hidden",
+    transform: "translateZ(0)",
+  },
 
-  // Bottom layout
   bottomBar: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
     height: 180,
-    background: "linear-gradient(0deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 60%, transparent 100%)",
+    background:
+      "linear-gradient(0deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 60%, transparent 100%)",
     display: "flex",
     justifyContent: "space-between",
     alignItems: "flex-end",
-    padding: "0 40px 30px 40px",
+    padding: "0 15px 25px 15px",
     pointerEvents: "none",
   },
 
+  
   playerBox: {
-    width: 300,
-    background: "rgba(255,255,255,0.06)",
-    backdropFilter: "blur(12px)",
-    border: "1px solid rgba(255,255,255,0.15)",
-    padding: "16px 20px",
-    borderRadius: 20,
-    color: "white",
+    width: 310,
+    padding: 0,
+    background: "transparent",
+    border: 0,
+    borderRadius: 0,
+    boxShadow: "none",
+    backdropFilter: "none",
+    WebkitBackdropFilter: "none",
     pointerEvents: "auto",
-    boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
   },
+
   playerBarRow: {
     display: "flex",
     justifyContent: "space-between",
@@ -481,54 +481,60 @@ const styles: Record<string, CSSProperties> = {
   statLabel: { opacity: 0.5, fontSize: 11, fontWeight: 500, marginRight: 6 },
 
   actionBox: {
-    width: 440,
+    width: GROUP_W,
     display: "flex",
     flexDirection: "column",
-    gap: 12,
+    gap: 6,
     pointerEvents: "auto",
     alignItems: "flex-end",
+    marginLeft: "auto",
   },
+
   mainActions: {
     display: "flex",
-    gap: 12,
+    gap: GAP,
     width: "100%",
+    justifyContent: "flex-end",
   },
+
   btnAction: {
-    flex: 1,
-    height: 84,
-    background: "rgba(255,255,255,0.08)",
-    border: "1px solid rgba(255,255,255,0.2)",
-    borderRadius: 18,
-    color: "#fff",
+    width: BTN_W,
+    height: BTN_H,
+    flex: "0 0 auto",
+    background: "transparent",
+    border: 0,
+    borderRadius: 0,
+    boxShadow: "none",
+    backdropFilter: "none",
+    WebkitBackdropFilter: "none",
+    display: "grid",
+    placeItems: "center",
     cursor: "pointer",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 4,
-    backdropFilter: "blur(10px)",
-    transition: "all 0.2s",
-    boxShadow: "0 4px 15px rgba(0,0,0,0.3)",
+    padding: 0,
   },
+
   btnIcon: { fontSize: 24 },
   btnLabel: { fontSize: 13, fontWeight: 800, opacity: 0.8 },
   btnHeavyCol: { background: "rgba(255, 152, 0, 0.1)", borderColor: "rgba(255, 152, 0, 0.3)" },
 
   luckyToggle: {
+    width: 180,
+    height: 48,
     display: "flex",
     alignItems: "center",
-    gap: 10,
-    color: "#fff",
-    padding: "8px 20px",
-    background: "rgba(0,0,0,0.4)",
-    borderRadius: 12,
-    border: "1px solid rgba(255,255,255,0.1)",
+    justifyContent: "space-between",
+    padding: "0 14px",
+    borderRadius: 14,
+    border: "1px solid rgba(255,255,255,0.12)",
+    background: "rgba(0,0,0,0.55)",
+    boxShadow: "0 10px 25px rgba(0,0,0,0.55)",
     cursor: "pointer",
+    gap: 0,
+    color: "#fff",
   },
   luckyCheck: { width: 18, height: 18 },
   luckyText: { fontSize: 13, fontWeight: 700, letterSpacing: 0.5 },
 
-  // Logs
   logPanel: {
     width: 320,
     height: 640,
@@ -550,73 +556,107 @@ const styles: Record<string, CSSProperties> = {
     color: "rgba(255,255,255,0.4)",
     display: "flex",
     alignItems: "center",
-    gap: 10,
   },
-  logCircle: { width: 8, height: 8, borderRadius: "50%", background: "#4caf50" },
-  logBody: {
-    flex: 1,
-    overflowY: "auto",
-    padding: "16px 20px",
-    display: "flex",
-    flexDirection: "column",
-    gap: 8,
-    color: "rgba(255,255,255,0.7)",
-  },
-  logLine: { fontSize: 13, lineHeight: 1.5, wordBreak: "break-all" },
 
-  // Overlays
+  /**
+   * =========================
+   * CTRL+F: BATTLE_PAGE_OVERLAY_STYLES
+   * =========================
+   * 승리/패배 오버레이 + 로그 스크롤이 “안 보이거나/안 움직이는” 문제 해결용
+   * (기존 로직/배치는 그대로, 스타일 키만 추가)
+   */
   overlay: {
     position: "absolute",
     inset: 0,
-    background: "rgba(0,0,0,0.92)",
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "center",
-    alignItems: "center",
-    color: "white",
-    zIndex: 100,
-    animation: "fadeIn 0.5s ease forwards",
+    zIndex: 999,
+    background: "rgba(0,0,0,0.72)",
+    display: "grid",
+    placeItems: "center",
+    pointerEvents: "auto",
   },
-  overlayTitle: { fontSize: 80, fontWeight: 900, letterSpacing: 10, color: "#f44336", marginBottom: 10 },
-  overlaySub: { fontSize: 18, opacity: 0.6, marginBottom: 40 },
-  exitBtn: {
-    padding: "16px 32px",
-    background: "transparent",
-    border: "1px solid #fff",
+  overlayTitle: {
+    fontSize: 44,
+    fontWeight: 900,
+    letterSpacing: 2,
     color: "#fff",
-    borderRadius: 12,
+    textShadow: "0 10px 40px rgba(0,0,0,0.9)",
+    marginBottom: 10,
+  },
+  overlaySub: {
     fontSize: 16,
     fontWeight: 700,
+    color: "rgba(255,255,255,0.85)",
+    marginBottom: 18,
+    textShadow: "0 6px 24px rgba(0,0,0,0.9)",
+  },
+  exitBtn: {
+    padding: "12px 18px",
+    borderRadius: 12,
+    border: "1px solid rgba(255,255,255,0.25)",
+    background: "rgba(0,0,0,0.55)",
+    color: "#fff",
     cursor: "pointer",
-    transition: "all 0.3s",
+    fontWeight: 800,
+    letterSpacing: 0.5,
   },
 
+  // VictoryOverlay.tsx에서 사용하는 스타일 키들
   victoryTitle: {
-    fontSize: 80,
+    fontSize: 44,
     fontWeight: 900,
-    letterSpacing: 15,
-    background: "linear-gradient(180deg, #ffd700, #ffa000)",
-    WebkitBackgroundClip: "text",
-    WebkitTextFillColor: "transparent",
-    filter: "drop-shadow(0 0 20px rgba(255,215,0,0.4))",
-    marginBottom: 40,
-  },
-  rewardBox: { width: 440, background: "rgba(255,255,255,0.05)", padding: 30, borderRadius: 24, border: "1px solid rgba(255,255,255,0.1)" },
-  rewardHead: { textAlign: "center", marginBottom: 24, fontSize: 18, fontWeight: 700, opacity: 0.8 },
-  rewardBtns: { display: "flex", flexDirection: "column", gap: 12 },
-  rewardBtn: {
-    padding: "16px",
-    background: "rgba(255,255,255,0.06)",
-    border: "1px solid rgba(255,255,255,0.1)",
-    borderRadius: 14,
+    letterSpacing: 2,
     color: "#fff",
-    fontSize: 16,
-    fontWeight: 700,
+    textShadow: "0 10px 40px rgba(0,0,0,0.9)",
+    marginBottom: 14,
+  },
+  rewardBox: {
+    width: 420,
+    borderRadius: 18,
+    background: "rgba(15,15,15,0.9)",
+    border: "1px solid rgba(255,255,255,0.12)",
+    boxShadow: "0 30px 90px rgba(0,0,0,0.85)",
+    padding: 18,
+    display: "flex",
+    flexDirection: "column",
+    gap: 14,
+  },
+  rewardHead: {
+    fontWeight: 900,
+    fontSize: 14,
+    letterSpacing: 1,
+    color: "rgba(255,255,255,0.75)",
+    paddingBottom: 10,
+    borderBottom: "1px solid rgba(255,255,255,0.08)",
+  },
+  rewardBtns: { display: "flex", flexDirection: "column", gap: 10 },
+  rewardBtn: {
+    width: "100%",
+    height: 46,
+    borderRadius: 14,
+    border: "1px solid rgba(255,255,255,0.14)",
+    background: "rgba(0,0,0,0.55)",
+    color: "#fff",
+    cursor: "pointer",
+    fontWeight: 800,
     display: "flex",
     alignItems: "center",
-    gap: 15,
-    cursor: "pointer",
-    transition: "all 0.2s",
+    gap: 10,
+    padding: "0 14px",
   },
-  rewardIcon: { fontSize: 20 },
+  rewardIcon: { fontSize: 18 },
+
+  // BattleLog.tsx에서 흔히 쓰는 스크롤 바디
+  logBody: {
+    flex: 1,
+    overflowY: "auto",
+    padding: "16px 18px 18px 18px",
+    color: "#fff",
+  },
+  logLine: {
+    fontSize: 13,
+    lineHeight: 1.55,
+    color: "rgba(255,255,255,0.9)",
+    marginBottom: 8,
+    wordBreak: "break-word",
+  },
 };
