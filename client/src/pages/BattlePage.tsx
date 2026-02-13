@@ -55,6 +55,7 @@ export default function BattlePage() {
   const [shakeEnemy, setShakeEnemy] = useState(false);
   const [luckyChecked, setLuckyChecked] = useState(false);
   const [rewardOpen, setRewardOpen] = useState(false);
+  const [escapeHover, setEscapeHover] = useState(false);
 
   const isVictory = (monster?.hp ?? 0) <= 0;
   const isDefeat = hp <= 0;
@@ -179,9 +180,25 @@ export default function BattlePage() {
             styles={styles}
           />
 
-          <button type="button" style={styles.escapeBtn} onClick={onEscape}>
-            도망
+            <button
+            type="button"
+            style={{
+              ...styles.escapeBtn, 
+              ...(escapeHover ? styles.escapeBtnHover : null), 
+            }}
+            onClick={onEscape}
+            onMouseEnter={() => setEscapeHover(true)} 
+            onMouseLeave={() => setEscapeHover(false)} 
+            aria-label="도망" 
+          >
+            <img
+              src="/battle/run.png" 
+              alt="도망"
+              style={styles.escapeImg} 
+              draggable={false} 
+            />
           </button>
+
 
           <BattleHUD
             stage={stage}
@@ -218,11 +235,13 @@ export default function BattlePage() {
 
           {isDefeat && (
             <div style={styles.overlay}>
+              <div style={styles.overlayContent}>
               <div style={styles.overlayTitle}>DEFEAT</div>
               <div style={styles.overlaySub}>여정은 여기까지입니다...</div>
               <button style={styles.exitBtn} onClick={() => navigate("/")}>
                 타이틀로 이동
               </button>
+              </div>
             </div>
           )}
 
@@ -256,9 +275,11 @@ const styles: Record<string, CSSProperties> = {
   outsideBg: {
     position: "absolute",
     inset: 0,
-    backgroundImage: 'url("/battle_bg_blur.png")',
+    backgroundImage: 'url("/battle/outside.png")', // <--- 여기를 수정 (outside.png로 교체)
     backgroundSize: "cover",
-    filter: "blur(20px) brightness(0.4)",
+    backgroundPosition: "center", // <--- 여기를 수정 (중앙 기준)
+    transform: "scale(1.08)", // <--- 여기를 수정 (블러로 생기는 가장자리 빈틈 방지)
+    filter: "blur(12px) brightness(0.5)", // <--- 여기를 수정 (블러/밝기 조절)
   },
   outsideDim: { position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)" },
 
@@ -289,25 +310,37 @@ const styles: Record<string, CSSProperties> = {
     pointerEvents: "none",
   },
 
-  escapeBtn: {
+    escapeBtn: {
     position: "absolute",
     top: 20,
     right: 20,
     zIndex: 20,
-    background: "rgba(0,0,0,0.6)",
-    border: "1px solid rgba(255,255,255,0.2)",
-    color: "#fff",
-    padding: "8px 16px",
-    borderRadius: 10,
+    background: "transparent", // <--- 여기를 수정
+    border: 0, // <--- 여기를 수정
+    padding: 0, // <--- 여기를 수정
+    borderRadius: 0, // <--- 여기를 수정
     cursor: "pointer",
-    fontSize: 13,
-    backdropFilter: "blur(8px)",
-    transition: "all 0.2s",
+    transition: "transform 120ms ease, filter 120ms ease", // <--- 여기를 수정
   },
+
+  escapeBtnHover: {
+    transform: "scale(1.00)", // <--- 여기를 수정 (호버 확대감)
+    filter: "brightness(1.2) drop-shadow(0 6px 12px rgba(0,0,0,0.55))", // <--- 여기를 수정 (호버 느낌)
+  },
+
+  escapeImg: {
+    width: 96, // <--- 여기를 수정 (표시 사이즈)
+    height: 40, // <--- 여기를 수정 (표시 사이즈)
+    display: "block",
+    userSelect: "none",
+    WebkitUserSelect: "none",
+    pointerEvents: "none",
+  },
+
 
   enemyTop: {
     position: "absolute",
-    top: 30,
+    top: 14,
     left: "50%",
     transform: "translateX(-50%)",
     width: 440,
@@ -316,13 +349,58 @@ const styles: Record<string, CSSProperties> = {
     flexDirection: "column",
     gap: 12,
   },
+    intentBoxWrap: {
+    position: "relative",
+    width: 160, // <--- 여기를 수정 (의도 박스 표시 크기)
+    height: 40, // <--- 여기를 수정
+    alignSelf: "center",
+    display: "grid",
+    placeItems: "center",
+  },
+
+  intentBoxImg: {
+    position: "absolute",
+    inset: 0,
+    width: "100%",
+    height: "100%",
+    objectFit: "contain",
+    pointerEvents: "none",
+    userSelect: "none",
+    WebkitUserSelect: "none",
+    zIndex: 0,
+  },
+
+  enemyHpBoxWrap: {
+    position: "relative",
+    width: 960, // <--- 여기를 수정 (1400/2)
+    height: 48, // <--- 여기를 수정 (1400/2)
+    alignSelf: "center",
+    display: "block", // <--- 여기를 수정 (중앙정렬로 내려가는 문제 방지)
+  },
+
+  enemyHpBoxImg: {
+    position: "absolute",
+    inset: 0,
+    width: "100%",
+    height: "100%",
+    objectFit: "fill",
+    pointerEvents: "none",
+    userSelect: "none",
+    WebkitUserSelect: "none",
+    zIndex: 0,
+    transform: "translateY(-5px)", // <--- 여기를 수정 (박스만 위로)
+  },
+
 
   intentRow: {
-    display: "flex",
-    justifyContent: "center",
-    gap: 10,
-    alignItems: "center",
+    position: "absolute", // <--- 여기를 수정
+    inset: 0,             // <--- 여기를 수정 (박스 전체 덮기)
+    display: "grid",      // <--- 여기를 수정
+    placeItems: "center", // <--- 여기를 수정
+    zIndex: 1,            // <--- 여기를 수정 (박스 이미지 위로)
+    transform: "translate(-1px, -1px)", // <--- 여기를 수정 (x, y) 
   },
+
   turnPill: {
     background: "rgba(255,255,255,0.15)",
     padding: "4px 12px",
@@ -334,44 +412,60 @@ const styles: Record<string, CSSProperties> = {
     border: "1px solid rgba(255,255,255,0.1)",
   },
   intentPill: {
-    background: "rgba(0,0,0,0.7)",
-    padding: "4px 14px",
+    background: "transparent",
+    padding: "0", // <--- 여기를 수정 (박스 크기 줄였으니 패딩 제거)
     borderRadius: 8,
     fontSize: 13,
-    fontWeight: 600,
+    fontWeight: 700, // <--- 여기를 수정 (가독성)
     color: "#ffc107",
-    border: "1px solid rgba(255,193,7,0.3)",
-    boxShadow: "0 0 15px rgba(255,193,7,0.1)",
+    border: "0",
+    boxShadow: "none",
+    textShadow: "0 2px 6px rgba(0,0,0,0.8)", // <--- 여기를 수정 (텍스트 안 보이는 문제 보강)
   },
 
+
+
   enemyHpBarOuter: {
-    width: "100%",
-    height: 32,
-    background: "rgba(0,0,0,0.6)",
-    position: "relative",
-    borderRadius: 10,
+    width: 335.7,
+    height: 24.5,
+    background: "rgba(0,0,0,0.25)", // <--- 여기를 수정 (홈 바닥 톤)
+    position: "absolute",
+    left: "50.06%",
+    transform: "translateX(-50%)",
+    top: 7,
+    borderRadius: 3,
     overflow: "hidden",
-    border: "1px solid rgba(255,255,255,0.15)",
-    boxShadow: "0 4px 15px rgba(0,0,0,0.5)",
+    border: "1px solid rgba(255,255,255,0.08)", // <--- 여기를 수정 (얇은 테두리)
+    boxShadow: "inset 0 2px 6px rgba(0,0,0,0.55)", // <--- 여기를 수정 (홈에 들어간 느낌)
+    zIndex: 1,
   },
+
   enemyHpBarInner: {
     height: "100%",
-    background: "linear-gradient(90deg, #c62828 0%, #ef5350 100%)",
-    boxShadow: "0 0 20px rgba(239, 83, 80, 0.4)",
+    borderRadius: 3,
+    background: "linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 35%), linear-gradient(90deg, #7a1f1f 0%, #c43737 45%, #e05858 100%)", // <--- 여기를 수정
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -2px 6px rgba(0,0,0,0.35)", // <--- 여기를 수정 (바 자체 입체감)
     transition: "width 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28)",
   },
+
+
   enemyHpBarTextRow: {
     position: "absolute",
     inset: 0,
     display: "flex",
     justifyContent: "space-between",
     padding: "0 14px",
-    color: "white",
+    color: "rgba(255,255,255,0.92)", // <--- 여기를 수정
     alignItems: "center",
     pointerEvents: "none",
+    transform: "translateY(-1px)",
+    textShadow: "0 2px 6px rgba(0,0,0,0.85)", // <--- 여기를 수정 (프레임 위에서 가독성)
   },
+
+
+
   monsterName: { fontWeight: 900, fontSize: 15, textShadow: "0 2px 4px rgba(0,0,0,0.8)" },
-  monsterHpVal: { fontWeight: 700, fontSize: 13, opacity: 0.9 },
+  monsterHpVal: { fontWeight: 800, fontSize: 13, opacity: 0.95 }, // <--- 여기를 수정
 
   centerStage: {
     position: "absolute",
@@ -451,21 +545,27 @@ const styles: Record<string, CSSProperties> = {
   },
   playerTitle: { fontWeight: 900, fontSize: 13, letterSpacing: 1, opacity: 0.6 },
   playerHpText: { fontWeight: 800, fontSize: 16 },
+  
   playerHpBarOuter: {
     width: "100%",
     height: 10,
-    background: "rgba(255,255,255,0.1)",
-    borderRadius: 5,
+    background: "rgba(0,0,0,0.35)", // <--- 여기를 수정 (홈 바닥 톤)
+    borderRadius: 3, // <--- 여기를 수정 (프레임 각진 느낌에 맞춤)
     overflow: "hidden",
     marginBottom: 16,
-    border: "1px solid rgba(255,255,255,0.05)",
+    border: "1px solid rgba(255,255,255,0.08)", // <--- 여기를 수정 (얇은 테두리)
+    boxShadow: "inset 0 1px 3px rgba(0,0,0,0.65)", // <--- 여기를 수정 (홈에 들어간 느낌)
   },
+  
   playerHpBarInner: {
     height: "100%",
-    background: "linear-gradient(90deg, #43a047 0%, #66bb6a 100%)",
-    boxShadow: "0 0 15px rgba(102, 187, 106, 0.3)",
+    borderRadius: 3, // <--- 여기를 수정 (outer와 통일)
+    background:
+      "linear-gradient(180deg, rgba(255,255,255,0.20) 0%, rgba(255,255,255,0) 55%), linear-gradient(90deg, #3e5a22 0%, #6e8f34 55%, #a7c957 100%)", // <--- 여기를 수정 (올리브/황동 톤)
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -2px 4px rgba(0,0,0,0.35)", // <--- 여기를 수정 (질감)
     transition: "width 0.4s ease",
   },
+
   playerStatRow: { display: "flex", gap: 15, alignItems: "center" },
   slotWrap: {
     width: 50,
@@ -553,20 +653,28 @@ const styles: Record<string, CSSProperties> = {
     placeItems: "center",
     pointerEvents: "auto",
   },
+  overlayContent: {                      // <--- 여기 수정(추가)
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 20,                             // <--- 여기 수정(간격 조절)
+    textAlign: "center",
+  },
   overlayTitle: {
     fontSize: 44,
     fontWeight: 900,
     letterSpacing: 2,
-    color: "#fff",
+    color: "#ff4d4d",
     textShadow: "0 10px 40px rgba(0,0,0,0.9)",
-    marginBottom: 10,
+    marginBottom: 0,
   },
   overlaySub: {
     fontSize: 16,
     fontWeight: 700,
-    color: "rgba(255,255,255,0.85)",
-    marginBottom: 18,
-    textShadow: "0 6px 24px rgba(0,0,0,0.9)",
+    color: "rgba(255,255,255,0.9)",
+    marginBottom: 0,
+    textShadow: "0 6px 24px rgba(0,0,0,1)",
   },
   exitBtn: {
     padding: "12px 18px",
@@ -577,6 +685,7 @@ const styles: Record<string, CSSProperties> = {
     cursor: "pointer",
     fontWeight: 800,
     letterSpacing: 0.5,
+    marginTop: 10,
   },
 
   // VictoryOverlay.tsx에서 사용하는 스타일 키들

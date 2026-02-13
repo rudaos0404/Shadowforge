@@ -6,9 +6,25 @@ interface Props {
 }
 
 export default function VictoryOverlay({ onPickReward, styles }: Props) {
+
+    const overlayStyle: CSSProperties = {                 // <--- 여기 수정
+        ...styles.overlay,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 14,                                          // <--- 여기 수정 (간격 조절)
+    };
+
+    const victoryTitleStyle: CSSProperties = {            // <--- 여기 수정
+        ...styles.victoryTitle,
+        color: "#f5c542",                                 // <--- 여기 수정 (노란색 계열)
+        textShadow: "0 2px 12px rgba(255, 204, 102, 0.35)",// <--- 여기 수정 (원하면 제거/조절)
+    };
+
     return (
-        <div style={styles.overlay}>
-            <div style={styles.victoryTitle}>VICTORY</div>
+        <div style={overlayStyle}>                        {/* <--- 여기 수정 */}
+            <div style={victoryTitleStyle}>VICTORY</div>
             <div style={styles.rewardBox}>
                 <div style={styles.rewardHead}>보상을 선택하세요</div>
                 <div style={styles.rewardBtns}>

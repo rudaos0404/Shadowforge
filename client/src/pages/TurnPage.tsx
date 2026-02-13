@@ -87,8 +87,8 @@ export default function TurnPage() {
       SHOP: "/gadgets/포션.png",
       TREASURE: "/gadgets/보물상자1.png",
       REST: "/gadgets/휴식모닥불.png",
-      BOSS_BATTLE: "/gadgets/해골.png", // 또는 다른 강조 아이콘
-      FINAL_BATTLE: "/gadgets/해골.png",
+      BOSS_BATTLE: "/gadgets/boss_battle.png", // 또는 다른 강조 아이콘
+      FINAL_BATTLE: "/gadgets/final_boss_battle.png",
     } as const;
   }, []);
 
@@ -254,9 +254,9 @@ const styles: Record<string, CSSProperties> = {
   card: { height: 176, borderRadius: 18, padding: 18, textAlign: "left", color: "#fff", cursor: "pointer", backdropFilter: "blur(10px)", border: "1px solid rgba(255,255,255,0.22)", boxShadow: "0 18px 55px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.10), inset 0 0 0 1px rgba(255,255,255,0.04)", transition: "transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease, filter 120ms ease", outline: "none" },
   cardHover: { transform: "translateY(-4px)", border: "1px solid rgba(255,255,255,0.45)", boxShadow: "0 26px 80px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.14), inset 0 0 0 1px rgba(255,255,255,0.05)", filter: "brightness(1.06)" },
   cardPressed: { transform: "translateY(-1px) scale(0.995)", border: "1px solid rgba(255,255,255,0.28)", boxShadow: "0 14px 45px rgba(0,0,0,0.60), inset 0 1px 0 rgba(255,255,255,0.08), inset 0 0 0 1px rgba(255,255,255,0.03)", filter: "brightness(0.96)" },
-  cardTop: { display: "grid", gridTemplateColumns: "72px 1fr", gap: 14, alignItems: "center" },
-  cardIconWrap: { width: 72, height: 72, borderRadius: 16, background: "rgba(0,0,0,0.35)", border: "1px solid rgba(255,255,255,0.14)", display: "grid", placeItems: "center", overflow: "hidden" },
-  cardIcon: { width: 64, height: 64, objectFit: "contain", filter: "drop-shadow(0 6px 12px rgba(0,0,0,0.75))" },
+  cardTop: { display: "grid", gridTemplateColumns: "84px 1fr", gap: 14, alignItems: "center" },
+  cardIconWrap: { width: 80, height: 80, borderRadius: 0, background: "transparent", border: "none", display: "grid", placeItems: "center", overflow: "visible" },
+  cardIcon: { width: 73, height: 73, objectFit: "contain", filter: "drop-shadow(0 6px 12px rgba(0,0,0,0.70))" },
   cardTitleBlock: { minWidth: 0 },
   cardTitleRow: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 8 },
   cardTitle: { fontSize: 30, fontWeight: 900, letterSpacing: 0.3, textShadow: "0 2px 10px rgba(0,0,0,0.65)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },

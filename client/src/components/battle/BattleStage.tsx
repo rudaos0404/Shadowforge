@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from "react";
+import { type CSSProperties } from "react";
 import type { Monster } from "../../shared/api/types";
 
 interface Props {
@@ -9,25 +9,6 @@ interface Props {
   shakeEnemy: boolean;
   styles: Record<string, CSSProperties>;
 }
-
-const DEV_MONSTERS = [
-  "steel_soldier.png",
-  "spider.png",
-  "goblin.png",
-  "axe_soldier.png",
-  "skeleton.png",
-  "scarab.png",
-  "stone_golem.png",
-  "beast_warrior.png",
-  "imp.png",
-  "kobold.png",
-  "hellhound.png",
-  "lord_death.png",
-  "lord_earth.png",
-  "lord_bone.png",
-  "lord_dark.png",
-  "lord_rot.png",
-] as const;
 
 const BOSS_BG = "/battle/Bossbg.png";
 const BOSS_PLAYER = "/battle/boss vs player.png";
@@ -54,7 +35,7 @@ const perBossEnemySlot: Record<string, Partial<CSSProperties>> = {
   "lord_death.png": { left: "26%", bottom: "-2%" },
   "lord_earth.png": { left: "24%", bottom: "11%", width: "clamp(360px, 52vw, 560px)" },
   "lord_bone.png": { left: "23%", bottom: "10%" },
-  "lord_dark.png": { left: "24.5%", bottom: "-5%" },
+  "lord_dark.png": { left: "24.5%", bottom: "-6%" },
   "lord_rot.png": { left: "27%", bottom: "3%", height: "clamp(300px, 62vh, 520px)" },
 };
 
@@ -66,9 +47,8 @@ export default function BattleStage({
   shakeEnemy,
   styles,
 }: Props) {
-  const [devMonster, setDevMonster] = useState<string>("");
 
-  const monsterFile = devMonster || monster?.imagePath || "";
+  const monsterFile = monster?.imagePath || "";
   const monsterPath = monsterFile ? `${MONSTER_ASSET_BASE_URL}${monsterFile}` : "";
   const isBoss = monsterFile.includes("lord_");
 
@@ -181,30 +161,6 @@ export default function BattleStage({
     <>
       <div style={{ ...styles.bg, backgroundImage: `url("${stageBg}")` }} />
       <div style={styles.vignette} />
-
-      {import.meta.env.DEV && (
-        <div style={{ position: "absolute", left: 12, top: 12, zIndex: 9999 }}>
-          <select
-            value={devMonster}
-            onChange={(e) => setDevMonster(e.target.value)}
-            style={{
-              padding: "6px 8px",
-              borderRadius: 8,
-              border: "1px solid rgba(255,255,255,0.25)",
-              background: "rgba(0,0,0,0.6)",
-              color: "rgba(255,255,255,0.9)",
-              outline: "none",
-            }}
-          >
-            <option value="">(실제 몬스터)</option>
-            {DEV_MONSTERS.map((name) => (
-              <option key={name} value={name}>
-                {name}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
 
       {isBoss ? (
         <div style={{ ...styles.centerStage, ...visibleWrap }}>

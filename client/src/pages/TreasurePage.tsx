@@ -17,15 +17,14 @@ export default function TreasurePage() {
 
   const [claimed, setClaimed] = useState(false);
   const [chestImg, setChestImg] = useState<string>(CHEST_2);
-  const [toast, setToast] = useState<string>("");
+  const [toast,] = useState<string>("");
   const [toastVisible, setToastVisible] = useState(false);
 
-  const toastDurationMs = 2000;
   const goNextDelayMs = 1400;
 
   useEffect(() => {
     if (!toastVisible) return;
-    const t = window.setTimeout(() => setToastVisible(false), toastDurationMs);
+    const t = window.setTimeout(() => setToastVisible(false), );
     return () => window.clearTimeout(t);
   }, [toastVisible]);
 
@@ -35,9 +34,6 @@ export default function TreasurePage() {
 
     setClaimed(true);
     setChestImg(CHEST_3);
-
-    setToast(`+${rewardGold}G 를 획득했다!`);
-    setToastVisible(true);
 
     window.setTimeout(async () => {
       await nextTurn(userId);
@@ -129,10 +125,7 @@ export default function TreasurePage() {
 
               {/* 오른쪽: 텍스트/버튼 */}
               <div style={{ textAlign: "left" }}>
-                <div style={{ fontSize: 42, fontWeight: 800, marginBottom: 10 }}>
-                  상자 개봉
-                </div>
-                <div style={{ opacity: 0.9, marginBottom: 18 }}>
+              <div style={{ opacity: 0.9, marginBottom: 18 }}>
                   상자를 열어 골드를 획득할 수 있다.
                 </div>
 
@@ -159,9 +152,20 @@ export default function TreasurePage() {
                     (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
                   }}
                 >
-                  획득하고 다음 STAGE
+                  {claimed ? (                                           /* <--- 여기 수정 */
+                    <span>
+                      <span style={{ color: "#f6d365", fontWeight: 900 }}> {/* <--- 여기 수정(56G 금색) */}
+                        {rewardGold}G
+                      </span>
+                      <span style={{ color: "#fff", fontWeight: 800 }}>    {/* <--- 여기 수정(획득! 흰색) */}
+                        {" "}획득!
+                      </span>
+                    </span>
+                  ) : (
+                    "상자 열기"                                           /* <--- 여기 수정 */
+                  )}
                 </button>
-
+                
                 {/* ✅ 안내 문구: 너무 빨리 안 사라지도록 */}
                 <div
                   style={{

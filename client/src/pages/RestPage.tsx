@@ -5,6 +5,7 @@ import GameFrame from "../components/GameFrame";
 import { useGameStore } from "../stores/game.store";
 
 const BG = "/turn.png";
+const FIRE = "/gadgets/휴식모닥불.png"; // <--- 여기 수정(추가)
 
 export default function RestPage() {
   const navigate = useNavigate();
@@ -62,65 +63,140 @@ export default function RestPage() {
           }}
         >
           <div
+  style={{
+    width: "min(980px, 92%)", // <--- 여기 수정
+    border: "1px solid rgba(255,255,255,0.35)", // <--- 여기 수정
+    borderRadius: 18, // <--- 여기 수정
+    background: "rgba(0,0,0,0.35)", // <--- 여기 수정
+    padding: 28, // <--- 여기 수정
+    boxShadow: "0 20px 60px rgba(0,0,0,0.45)", // <--- 여기 수정
+  }}
+>
+  {/* 상단 중앙 타이틀(보물 텍스트 위치) */}
+  <div style={{ textAlign: "center", marginBottom: 18 }}> {/* <--- 여기 수정 */}
+    <div style={{ fontSize: 54, fontWeight: 800, letterSpacing: 2 }}>
+      휴식 {/* <--- 여기 수정 */}
+    </div>
+    <div style={{ opacity: 0.9, marginTop: 6 }}>
+      휴식을 취합니다. {/* <--- 여기 수정 */}
+    </div>
+  </div>
+
+  {/* 보물처럼 2컬럼 */}
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: 28,
+      alignItems: "center",
+      padding: "10px 8px 4px",
+    }}
+  >
+    {/* 왼쪽: 모닥불 이미지(보물 상자 위치) */}
+    <div style={{ display: "flex", justifyContent: "center" }}>
+      <img
+        src={FIRE} // <--- 여기 수정(모닥불 이미지)
+        alt="campfire"
+        style={{
+          width: "min(360px, 90%)",
+          height: "auto",
+          filter: "drop-shadow(0 16px 30px rgba(0,0,0,0.55))",
+          userSelect: "none",
+        }}
+        draggable={false}
+      />
+    </div>
+
+    {/* 오른쪽: HP 영역(상자 개봉 위치) */}
+    <div style={{ textAlign: "left" }}>
+      {/* HP 라벨/수치 + HP바 */}
+      <div style={{ marginBottom: 12 }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            marginBottom: 10,
+            fontSize: 13,
+            fontWeight: 800,
+            color: "rgba(255,255,255,0.6)",
+          }}
+        >
+          <span>HP</span> {/* <--- 여기 수정 (HP RECOVERY -> HP) */}
+          <span>
+            {hp} / {maxHp}
+          </span>
+        </div>
+
+        <div
+          style={{
+            width: "100%",
+            height: 12,
+            background: "rgba(255,255,255,0.1)",
+            borderRadius: 6,
+            overflow: "hidden",
+          }}
+        >
+          <div
             style={{
-              width: "min(600px, 90%)",
-              background: "rgba(0,0,0,0.6)",
-              backdropFilter: "blur(12px)",
-              padding: 40,
-              borderRadius: 24,
-              border: "1px solid rgba(255,255,255,0.15)",
-              textAlign: "center",
-              boxShadow: "0 30px 60px rgba(0,0,0,0.5)",
+              height: "100%",
+              width: `${(hp / maxHp) * 100}%`,
+              background: "linear-gradient(90deg, #43a047, #66bb6a)",
+              transition: "width 0.8s cubic-bezier(0.4, 0, 0.2, 1)",
             }}
-          >
-            <div style={{ fontSize: 14, color: "#aaa", fontWeight: 800, marginBottom: 12 }}>STAGE {gameData?.currentTurn}</div>
-            <div style={{ fontSize: 48, fontWeight: 900, color: "#fff", marginBottom: 8 }}>고즈넉한 휴식</div>
-            <div style={{ color: "rgba(255,255,255,0.7)", marginBottom: 32 }}>모닥불 근처에서 몸을 추스릅니다.</div>
-
-            <div style={{ marginBottom: 40 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10, fontSize: 13, fontWeight: 800, color: "rgba(255,255,255,0.6)" }}>
-                <span>HP RECOVERY</span>
-                <span>{hp} / {maxHp}</span>
-              </div>
-              <div style={{ width: "100%", height: 12, background: "rgba(255,255,255,0.1)", borderRadius: 6, overflow: "hidden" }}>
-                <div
-                  style={{
-                    height: "100%",
-                    width: `${(hp / maxHp) * 100}%`,
-                    background: "linear-gradient(90deg, #43a047, #66bb6a)",
-                    transition: "width 0.8s cubic-bezier(0.4, 0, 0.2, 1)",
-                  }}
-                />
-              </div>
-            </div>
-
-            <button
-              onClick={onRest}
-              disabled={healed}
-              style={{
-                width: "100%",
-                height: 54,
-                borderRadius: 12,
-                border: "none",
-                background: healed ? "rgba(255,255,255,0.1)" : "#fff",
-                color: healed ? "#666" : "#000",
-                fontSize: 16,
-                fontWeight: 800,
-                cursor: healed ? "not-allowed" : "pointer",
-                transition: "all 0.2s",
-              }}
-            >
-              {healed ? "회복 완료" : "체력 회복하기"}
-            </button>
-
-            {healed && (
-              <div style={{ marginTop: 20, color: "#66bb6a", fontWeight: 800, fontSize: 14, animation: "fadeIn 0.5s" }}>
-                당신의 몸과 마음이 치유되었습니다.
-              </div>
-            )}
-          </div>
+          />
         </div>
       </div>
+
+      {/* 설명(상자를 열어 골드... 위치) */}
+      <div style={{ opacity: 0.9, marginBottom: 18 }}>
+        휴식을 하여 HP를 회복할 수 있다. {/* <--- 여기 수정 */}
+      </div>
+
+      {/* 버튼(획득하고 다음 STAGE 위치) */}
+      <button
+        onClick={onRest}
+        disabled={healed}
+        style={{
+          width: "min(420px, 100%)", // <--- 여기 수정
+          height: 54,
+          borderRadius: 12,
+          border: "1px solid rgba(255,255,255,0.25)", // <--- 여기 수정
+          background: healed ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.12)", // <--- 여기 수정
+          color: "white", // <--- 여기 수정
+          fontSize: 16,
+          fontWeight: 700,
+          cursor: healed ? "not-allowed" : "pointer",
+          transition: "transform 120ms ease, background 120ms ease",
+        }}
+        onMouseDown={(e) => {
+          if (healed) return;
+          (e.currentTarget as HTMLButtonElement).style.transform = "scale(0.99)";
+        }}
+        onMouseUp={(e) => {
+          (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
+        }}
+      >
+        {healed ? "회복 완료" : "체력 회복하기"}
+      </button>
+
+      {/* 완료 문구(+56G 위치) */}
+      <div
+        style={{
+          marginTop: 14,
+          height: 22,
+          opacity: healed ? 1 : 0,
+          transition: "opacity 220ms ease",
+          color: "rgba(255,255,255,0.9)", // <--- 여기 수정(원하면 색 조절)
+          fontWeight: 700,
+        }}
+      >
+        {healed ? "체력이 회복 되었습니다." : ""} {/* <--- 여기 수정 */}
+      </div>
+    </div>
+  </div>
+</div>
+         </div>
+        </div>
     </GameFrame>
   );
 }
